@@ -43,9 +43,19 @@ export function DelayedTasksModal({ tarefas, onClose }: DelayedTasksModalProps) 
                         <strong>Cliente:</strong> {tarefa.nome_cliente}
                       </p>
                     </div>
-                    <div className="text-right whitespace-nowrap">
-                      <p className="text-xs font-bold text-slate-700">{tarefa.data_evento_str}</p>
-                      <p className="text-[10px] text-slate-500 uppercase">{tarefa.tipo_tarefa}</p>
+                    <div className="text-right whitespace-nowrap flex flex-col justify-between items-end">
+                      <div>
+                        <p className="text-xs font-bold text-slate-700">{tarefa.data_evento_str}</p>
+                        <p className="text-[10px] text-slate-500 uppercase">{tarefa.tipo_tarefa}</p>
+                      </div>
+                      <a 
+                        href={`https://app10.ploomes.com/Tasks/calendar/task/${tarefa.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 text-[10px] font-bold text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-3 py-1 rounded-md transition-colors inline-flex items-center"
+                      >
+                        Ver no Ploomes ↗
+                      </a>
                     </div>
                   </div>
                 );
