@@ -20,7 +20,7 @@ export async function GET() {
       return NextResponse.json([]); // Retorna vazio se não tiver nem cache nem chave
     }
 
-    const res = await fetch('https://api2.ploomes.com/Tasks?$top=200&$expand=Contact($expand=Owner),Creator,Type,Deal($expand=Pipeline,Owner)&$orderby=DateTime desc', {
+    const res = await fetch('https://api2.ploomes.com/Tasks?$top=200&$expand=Users($expand=User),Contact($expand=Owner),Creator,Type,Deal($expand=Pipeline,Owner)&$orderby=DateTime desc', {
       headers: {
         'User-Key': ploomesApiKey,
         'Content-Type': 'application/json',
@@ -37,7 +37,9 @@ export async function GET() {
       let vendedorNome = task.Creator ? task.Creator.Name : 'Desconhecido';
       
       if (vendedorNome === 'Google Calendar') {
-        if (task.Deal && task.Deal.Owner) {
+        if (task.Users && task.Users.length > 0) {
+          vendedorNome = task.Users.map((u: any) => u.User?.Name || 'Desconhecido').join(' e ');
+        } else if (task.Deal && task.Deal.Owner) {
           vendedorNome = task.Deal.Owner.Name;
         } else if (task.Contact && task.Contact.Owner) {
           vendedorNome = task.Contact.Owner.Name;
