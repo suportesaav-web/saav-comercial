@@ -117,6 +117,10 @@ export async function POST() {
         contact_id: task.ContactId,
         google_sync: !!task.CreatesGoogleCalendarEvent,
       };
+    })
+    .filter((task: any) => {
+      const v = task.nome_vendedor.toLowerCase();
+      return !v.includes('informatica') && !v.includes('powerbi');
     });
 
     // Salva arquivo JSON
