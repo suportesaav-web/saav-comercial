@@ -1,72 +1,46 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
-import { useFilterStore } from '@/store/useFilterStore';
+import React, { useState, useMemo } from 'react';
 import { VendedorRankingChart } from '@/components/charts/VendedorRankingChart';
 import { InfoPopover } from '@/components/ui/InfoPopover';
+import { useTarefas } from '@/hooks/useTarefas';
+import { useFilterStore } from '@/store/useFilterStore';
+import { TaskInteractionsTimeline } from '@/components/timeline/TaskInteractionsTimeline';
+import { KpiDetailsModal } from '@/components/modals/KpiDetailsModal';
+import { Tarefa } from '@/types/tarefa';
 
 export default function VendedoresPage() {
-  const [tarefas, setTarefas] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedTarefa, setSelectedTarefa] = useState<any | null>(null);
+  const [kpiModalData, setKpiModalData] = useState<{ title: string; tarefas: Tarefa[] } | null>(null);
 
-  const { startDate, endDate, vendedores, clientes, tiposTarefa, status, funis, hideInternalTasks } = useFilterStore();
-
-  useEffect(() => {
-    fetch('/api/tarefas')
-      .then(res => res.json())
-      .then(data => {
-        setTarefas(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setLoading(false);
-      });
-  }, []);
-
-  const tarefasFiltradas = useMemo(() => {
-    return tarefas.filter((t: any) => {
-      if (hideInternalTasks && t.nome_cliente && t.nome_cliente.toUpperCase().includes('SAAVEDRA')) return false;
-      
-      if (startDate || endDate) {
-        const dateStr = t.data_evento_str || t.DateTime || t.CreateDate;
-        if (dateStr) {
-          let taskDate: Date;
-          if (dateStr.includes('/')) {
-            const [d, m, y] = dateStr.split('/');
-            taskDate = new Date(`${y}-${m}-${d}`);
-          } else {
-            taskDate = new Date(dateStr);
-          }
-          if (startDate && taskDate < startDate) return false;
-          if (endDate && taskDate > endDate) return false;
-        }
-      }
-      if (status.length > 0) {
-        if (!status.map(s => s.label).includes(t.status_operacional)) return false;
-      }
-      if (clientes.length > 0) {
-        if (!clientes.map(c => c.label).includes(t.nome_cliente)) return false;
-      }
-      if (vendedores && vendedores.length > 0) {
-        if (!vendedores.map(v => v.label).includes(t.nome_vendedor)) return false;
-      }
-      if (tiposTarefa.length > 0) {
-        if (!tiposTarefa.map(type => type.label).includes(t.tipo_tarefa)) return false;
-      }
-      if (funis.length > 0) {
-        if (!funis.map(f => f.label).includes(t.funil)) return false;
-      }
-      return true;
-    });
-  }, [tarefas, status, clientes, vendedores, startDate, endDate, tiposTarefa, funis, hideInternalTasks]);
+  const { tarefasFiltradas, loading, interacoes } = useTarefas();
+  const { startDate, endDate } = useFilterStore();
 
   // Agregação por Vendedor
   const statsPorVendedor = useMemo(() => {
     const acc: Record<string, any> = {};
     const now = new Date();
     
+    // Processamento de Interações para Adoção Mobile e Tempo Médio
+    const statsInteracoes: Record<string, { checkins_validos: number, total_duracao: number, visitas_interacoes: number }> = {};
+    interacoes.forEach((i: any) => {
+      const v = i.nome_vendedor || 'Desconhecido';
+      if (!statsInteracoes[v]) statsInteracoes[v] = { checkins_validos: 0, total_duracao: 0, visitas_interacoes: 0 };
+      
+      statsInteracoes[v].visitas_interacoes += 1;
+      
+      // Conta como adoção mobile se teve Check-in validado ou coordenadas GPS
+      if (i.checkin_validado || (i.checkin_lat && i.checkin_lng)) {
+        statsInteracoes[v].checkins_validos += 1;
+      }
+      
+      if (i.duracao_segundos) {
+        statsInteracoes[v].total_duracao += i.duracao_segundos;
+      }
+    });
+
+    const tarefasFechadasComInteracao = new Set(interacoes.filter((i: any) => i.task_id).map((i: any) => i.task_id));
+
     tarefasFiltradas.forEach(t => {
       const v = t.nome_vendedor || 'Desconhecido';
       if (!acc[v]) {
@@ -78,12 +52,19 @@ export default function VendedoresPage() {
           visitas: 0,
           horas: 0,
           comContato: 0,
+          semEngajamento: 0,
           ultimaAtividade: null
         };
       }
       
       acc[v].realizadas += 1;
-      if (t.finalizada) acc[v].finalizadas += 1;
+      
+      if (t.finalizada) {
+        acc[v].finalizadas += 1;
+        if (t.id && !tarefasFechadasComInteracao.has(t.id as number)) {
+          acc[v].semEngajamento += 1;
+        }
+      }
       
       const isOverdue = !t.finalizada && t.raw_datetime && new Date(t.raw_datetime) < now;
       if (isOverdue) acc[v].atrasadas += 1;
@@ -113,17 +94,29 @@ export default function VendedoresPage() {
     return Object.values(acc).map(v => {
       const diasOciosidade = v.ultimaAtividade 
         ? Math.floor((now.getTime() - v.ultimaAtividade.getTime()) / (1000 * 60 * 60 * 24)) 
-        : diasPeriodo; // se não tem atividade, ociosidade é o período todo
+        : diasPeriodo; 
         
+      const intStats = statsInteracoes[v.nome] || { checkins_validos: 0, total_duracao: 0, visitas_interacoes: 0 };
+      const adocaoMobile = intStats.visitas_interacoes > 0 
+        ? Math.round((intStats.checkins_validos / intStats.visitas_interacoes) * 100) 
+        : 0;
+      
+      const tempoMedioVisitaMin = intStats.checkins_validos > 0 
+        ? Math.round((intStats.total_duracao / intStats.checkins_validos) / 60) 
+        : 0;
+
       return {
         ...v,
         ociosidade: Math.max(0, diasOciosidade),
         mediaDiaria: (v.realizadas / diasPeriodo).toFixed(1),
         conformidade: v.realizadas > 0 ? Math.round((v.comContato / v.realizadas) * 100) : 100,
         conclusao: v.realizadas > 0 ? Math.round((v.finalizadas / v.realizadas) * 100) : 100,
+        adocaoMobile,
+        tempoMedioVisitaMin,
+        engajamento: v.finalizadas > 0 ? Math.round(((v.finalizadas - v.semEngajamento) / v.finalizadas) * 100) : 0
       }
     }).sort((a, b) => b.realizadas - a.realizadas);
-  }, [tarefasFiltradas, startDate, endDate]);
+  }, [tarefasFiltradas, interacoes, startDate, endDate]);
 
   // Totais (Equipe)
   const equipeRealizadas = statsPorVendedor.reduce((acc, v) => acc + v.realizadas, 0);
@@ -132,9 +125,9 @@ export default function VendedoresPage() {
   const mediaDiariaEquipe = statsPorVendedor.length > 0 
     ? (statsPorVendedor.reduce((acc, v) => acc + parseFloat(v.mediaDiaria), 0) / statsPorVendedor.length).toFixed(1) 
     : "0.0";
-  const mediaOciosidadeEquipe = statsPorVendedor.length > 0 
-    ? (statsPorVendedor.reduce((acc, v) => acc + v.ociosidade, 0) / statsPorVendedor.length).toFixed(1) 
-    : "0.0";
+  const mediaEngajamentoEquipe = statsPorVendedor.length > 0 
+    ? Math.round(statsPorVendedor.reduce((acc, v) => acc + v.engajamento, 0) / statsPorVendedor.length) 
+    : 0;
     
   // Auditoria (Tarefas Atrasadas)
   const tarefasAtrasadasDetalhes = useMemo(() => {
@@ -159,13 +152,17 @@ export default function VendedoresPage() {
             {/* Top KPIs */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
               {[
-                { label: 'Realizações', value: equipeRealizadas, color: 'text-slate-800', tooltip: 'Soma total de tarefas executadas pela equipe.' },
-                { label: 'Finalizadas', value: equipeFinalizadas, color: 'text-emerald-600', tooltip: 'Volume de tarefas que já foram concluídas.' },
-                { label: 'Atrasadas', value: equipeAtrasadas, color: 'text-red-600', tooltip: 'Tarefas da equipe que ultrapassaram o prazo.' },
-                { label: 'Média (Equipe)', value: mediaDiariaEquipe, color: 'text-blue-600', tooltip: 'Quantidade média de tarefas diárias por consultor.' },
-                { label: 'Conclusão (%)', value: equipeRealizadas > 0 ? `${Math.round((equipeFinalizadas / equipeRealizadas) * 100)}%` : '0%', color: 'text-indigo-600', tooltip: 'Taxa de conversão: (Finalizadas / Total).' },
+                { label: 'Realizações', value: equipeRealizadas, color: 'text-slate-800', tooltip: 'Soma total de tarefas executadas pela equipe.', filteredTasks: tarefasFiltradas },
+                { label: 'Finalizadas', value: equipeFinalizadas, color: 'text-emerald-600', tooltip: 'Volume de tarefas que já foram concluídas.', filteredTasks: tarefasFiltradas.filter((t: any) => t.finalizada) },
+                { label: 'Atrasadas', value: equipeAtrasadas, color: 'text-red-600', tooltip: 'Tarefas da equipe que ultrapassaram o prazo.', filteredTasks: tarefasFiltradas.filter((t: any) => !t.finalizada && t.raw_datetime && new Date(t.raw_datetime) < new Date()) },
+                { label: 'Média (Equipe)', value: mediaDiariaEquipe, color: 'text-blue-600', tooltip: 'Quantidade média de tarefas diárias por consultor.', filteredTasks: null },
+                { label: 'Engajamento (%)', value: `${mediaEngajamentoEquipe}%`, color: 'text-indigo-600', tooltip: 'Taxa média de tarefas finalizadas com documentação de visita.', filteredTasks: null },
               ].map((kpi, idx) => (
-                <div key={idx} className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                <div 
+                  key={idx} 
+                  onClick={() => kpi.filteredTasks && setKpiModalData({ title: kpi.label, tarefas: kpi.filteredTasks })}
+                  className={`p-4 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-shadow ${kpi.filteredTasks ? 'cursor-pointer hover:border-blue-200' : ''}`}
+                >
                   <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center justify-between">
                     {kpi.label}
                     <InfoPopover content={kpi.tooltip} />
@@ -205,6 +202,9 @@ export default function VendedoresPage() {
                       <th className="px-6 py-4 text-center">Visitas</th>
                       <th className="px-6 py-4 text-center">Horas (h)</th>
                       <th className="px-6 py-4 text-center">Contato (%)</th>
+                      <th className="px-6 py-4 text-center">Engajamento (%)</th>
+                      <th className="px-6 py-4 text-center">Check-in Mobile</th>
+                      <th className="px-6 py-4 text-center">Visita (min)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
@@ -223,6 +223,13 @@ export default function VendedoresPage() {
                         <td className="px-6 py-4 text-center font-medium text-slate-600">{v.visitas}</td>
                         <td className="px-6 py-4 text-center font-medium text-slate-600">{(v.horas / 60).toFixed(1)}</td>
                         <td className="px-6 py-4 text-center font-medium text-slate-600">{v.conformidade}%</td>
+                        <td className="px-6 py-4 text-center font-medium text-slate-600">
+                           <span className={`px-2 py-1 rounded-full text-[11px] font-bold ${v.engajamento >= 70 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                             {v.engajamento}%
+                           </span>
+                        </td>
+                        <td className="px-6 py-4 text-center font-medium text-blue-600">{v.adocaoMobile}%</td>
+                        <td className="px-6 py-4 text-center font-medium text-slate-600">{v.tempoMedioVisitaMin} min</td>
                       </tr>
                     ))}
                   </tbody>
@@ -322,11 +329,16 @@ export default function VendedoresPage() {
                 </div>
               </div>
               
-              <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
+              <div className="bg-gray-50 rounded-xl p-5 border border-gray-100 mb-6">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Título / Descrição</label>
                 <p className="text-sm font-medium text-slate-700 leading-relaxed whitespace-pre-wrap">
                   {selectedTarefa.titulo || 'Sem título ou descrição fornecida no Ploomes.'}
                 </p>
+              </div>
+
+              {/* Feed de Interações */}
+              <div className="mb-6">
+                <TaskInteractionsTimeline taskId={selectedTarefa.id} interacoes={interacoes} />
               </div>
               
               {selectedTarefa.deal_id && (
@@ -358,6 +370,26 @@ export default function VendedoresPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal de Detalhes do Cliente */}
+      {clientDetailsModal && (
+        <ClientDetailsModal 
+          isOpen={true} 
+          onClose={() => setClientDetailsModal(null)} 
+          clienteNome={clientDetailsModal}
+        />
+      )}
+
+      {/* Modal de Detalhes de KPI */}
+      {kpiModalData && (
+        <KpiDetailsModal 
+          isOpen={true}
+          onClose={() => setKpiModalData(null)}
+          kpiTitle={kpiModalData.title}
+          tarefas={kpiModalData.tarefas}
+          interacoes={interacoes}
+        />
       )}
     </main>
   );

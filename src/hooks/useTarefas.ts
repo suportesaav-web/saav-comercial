@@ -2,12 +2,14 @@ import useSWR from 'swr';
 import { useFilterStore } from '@/store/useFilterStore';
 import { useMemo } from 'react';
 import { Tarefa, Usuario } from '@/types/tarefa';
+import { Interacao } from '@/types/interacao';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function useTarefas() {
   const { data: tarefas = [], error: errorTarefas, isLoading: isLoadingTarefas } = useSWR<Tarefa[]>('/api/tarefas', fetcher);
   const { data: usuarios = [], error: errorUsuarios, isLoading: isLoadingUsuarios } = useSWR<Usuario[]>('/api/usuarios', fetcher);
+  const { data: interacoes = [], error: errorInteracoes, isLoading: isLoadingInteracoes } = useSWR<Interacao[]>('/api/interacoes', fetcher);
 
   const { 
     startDate, 
@@ -20,8 +22,8 @@ export function useTarefas() {
     hideInternalTasks 
   } = useFilterStore();
 
-  const loading = isLoadingTarefas || isLoadingUsuarios;
-  const error = errorTarefas || errorUsuarios;
+  const loading = isLoadingTarefas || isLoadingUsuarios || isLoadingInteracoes;
+  const error = errorTarefas || errorUsuarios || errorInteracoes;
 
   const tarefasFiltradas = useMemo(() => {
     return tarefas.filter((t) => {
@@ -74,6 +76,9 @@ export function useTarefas() {
   const tarefasFechadas = tarefasFiltradas.filter((t) => t.finalizada).length;
   const tarefasAtrasadas = tarefasFiltradas.filter((t) => !t.finalizada && t.raw_datetime && new Date(t.raw_datetime) < new Date()).length;
   
+  const tarefasFechadasComInteracao = new Set(interacoes.filter(i => i.task_id).map(i => i.task_id));
+  const tarefasFechadasSemInteracao = tarefasFiltradas.filter((t) => t.finalizada && t.id && !tarefasFechadasComInteracao.has(t.id as number)).length;
+
   let diasPeriodo = 30;
   if (startDate && endDate) {
     const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
@@ -140,9 +145,20 @@ export function useTarefas() {
     return sorted.map((s, idx) => ({ id: idx, cliente: s.cliente, volume: s.volume, negocios: s.negocios, max }));
   }, [tarefasFiltradas]);
 
+  // KPIs de Planejamento (Fantasmas vs Planejadas)
+  const tarefasPlanejadas = tarefasFiltradas.filter(t => {
+    if (!t.CreateDate || !t.raw_datetime) return true; // Se não tem data de criação ou execução, considera normal
+    const createDate = new Date(t.CreateDate).toLocaleDateString('pt-BR');
+    const executeDate = new Date(t.raw_datetime).toLocaleDateString('pt-BR');
+    return createDate !== executeDate && new Date(t.CreateDate) < new Date(t.raw_datetime);
+  }).length;
+  
+  const tarefasFantasmas = totalTarefas - tarefasPlanejadas;
+
   return {
     tarefas,
     usuarios,
+    interacoes,
     tarefasFiltradas,
     loading,
     error,
@@ -150,6 +166,9 @@ export function useTarefas() {
       totalTarefas,
       tarefasFechadas,
       tarefasAtrasadas,
+      tarefasFechadasSemInteracao,
+      tarefasPlanejadas,
+      tarefasFantasmas,
       mediaDiaria,
       visitasPresenciais,
       clientesAtendidos,

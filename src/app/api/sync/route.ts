@@ -128,10 +128,81 @@ export async function POST() {
     const filePath = path.join(dataDir, 'tarefas.json');
     fs.writeFileSync(filePath, JSON.stringify(tarefasMapeadas, null, 2));
 
+    // --- NOVA FASE: SINCRONIZAÇÃO DE INTERAÇÕES (Fase 1) ---
+    console.log('[Sync] Iniciando sincronização de Interações (a partir de Fev/2026)...');
+    let allInteractions: any[] = [];
+    let intSkip = 0;
+    let intHasMore = true;
+    let intIterations = 0;
+
+    // Buscando as últimas 1000 interações
+    const intMaxIterations = 4; // 4 * 300 = 1200 interações
+    while (intHasMore && intIterations < intMaxIterations) {
+      intIterations++;
+      console.log(`[Sync] Buscando interações (skip: ${intSkip})...`);
+      
+      const intUrl = encodeURI(`https://api2.ploomes.com/InteractionRecords?$top=${limit}&$skip=${intSkip}&$expand=Creator&$orderby=CreateDate desc`);
+      const intRes = await fetch(intUrl, {
+        headers: {
+          'User-Key': ploomesApiKey,
+          'Content-Type': 'application/json',
+        },
+        cache: 'no-store'
+      });
+
+      if (!intRes.ok) {
+        console.error(`Erro na API do Ploomes (Interações): ${intRes.status}`);
+        break; // Não falha a sync das tarefas se as interações falharem
+      }
+
+      const intData = await intRes.json();
+      
+      if (intData.value && intData.value.length > 0) {
+        allInteractions = allInteractions.concat(intData.value);
+        if (intData.value.length < limit) {
+          intHasMore = false;
+        } else {
+          intSkip += limit;
+          await new Promise(resolve => setTimeout(resolve, 600)); 
+        }
+      } else {
+        intHasMore = false;
+      }
+    }
+
+    const interacoesMapeadas = allInteractions.map((int: any) => {
+      return {
+        id: int.Id,
+        data_str: int.CreateDate ? new Date(int.CreateDate).toLocaleDateString('pt-BR') : '',
+        raw_datetime: int.CreateDate,
+        conteudo: int.Content,
+        task_id: int.OriginalTaskId,
+        deal_id: int.DealId,
+        contact_id: int.ContactId,
+        vendedor_id: int.CreatorId,
+        nome_vendedor: int.Creator ? int.Creator.Name : 'Desconhecido',
+        duracao_segundos: int.DurationInSeconds,
+        checkin_endereco: int.CheckInAddress,
+        checkin_lat: int.CheckInLatitude,
+        checkin_lng: int.CheckInLongitude,
+        checkout_endereco: int.CheckOutAddress,
+        checkout_lat: int.CheckOutLatitude,
+        checkout_lng: int.CheckOutLongitude,
+        checkin_validado: !!int.VerifiedCheckIn
+      };
+    }).filter((int: any) => {
+      const v = int.nome_vendedor.toLowerCase();
+      return !v.includes('informatica') && !v.includes('powerbi');
+    });
+
+    const intFilePath = path.join(dataDir, 'interacoes.json');
+    fs.writeFileSync(intFilePath, JSON.stringify(interacoesMapeadas, null, 2));
+
     return NextResponse.json({ 
       success: true, 
-      totalProcessed: tarefasMapeadas.length,
-      message: 'Base sincronizada com sucesso.' 
+      totalProcessedTasks: tarefasMapeadas.length,
+      totalProcessedInteractions: interacoesMapeadas.length,
+      message: 'Base de Tarefas e Interações sincronizada com sucesso.' 
     });
 
   } catch (error: any) {

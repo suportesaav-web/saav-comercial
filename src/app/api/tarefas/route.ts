@@ -61,6 +61,7 @@ export async function GET() {
         finalizada: isFinalizada,
         data_evento_str: task.DateTime ? new Date(task.DateTime).toLocaleDateString('pt-BR') : 'Data não definida',
         raw_datetime: task.DateTime,
+        CreateDate: task.CreateDate,
         horas: typeof task.Length === 'number' ? task.Length : 0,
         contact_id: task.ContactId,
         google_sync: !!task.CreatesGoogleCalendarEvent,

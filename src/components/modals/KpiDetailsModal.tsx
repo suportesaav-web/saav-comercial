@@ -3,51 +3,58 @@ import { Tarefa } from '@/types/tarefa';
 import { Interacao } from '@/types/interacao';
 import { TaskInteractionsTimeline } from '@/components/timeline/TaskInteractionsTimeline';
 
-interface DelayedTasksModalProps {
+interface KpiDetailsModalProps {
+  title: string;
   tarefas: Tarefa[];
   interacoes: Interacao[];
   onClose: () => void;
 }
 
-export function DelayedTasksModal({ tarefas, interacoes, onClose }: DelayedTasksModalProps) {
+export function KpiDetailsModal({ title, tarefas, interacoes, onClose }: KpiDetailsModalProps) {
   const [expandedTaskId, setExpandedTaskId] = useState<number | null>(null);
-  const tarefasAtrasadas = tarefas.filter(t => !t.finalizada && t.raw_datetime && new Date(t.raw_datetime) < new Date());
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden">
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-red-50">
-          <h3 className="text-xl font-bold text-red-700 flex items-center">
-            <span className="mr-2">⚠️</span> Tarefas em Atraso
+        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-blue-50">
+          <h3 className="text-xl font-bold text-blue-800 flex items-center">
+            <span className="mr-2">📋</span> {title} ({tarefas.length})
           </h3>
           <button 
             onClick={onClose}
-            className="text-slate-400 hover:text-red-600 font-bold text-xl leading-none"
+            className="text-slate-400 hover:text-blue-600 font-bold text-xl leading-none"
           >
             &times;
           </button>
         </div>
         
         <div className="p-6 overflow-y-auto flex-1 bg-gray-50/50">
-          {tarefasAtrasadas.length === 0 ? (
-            <p className="text-center text-slate-500 font-medium py-8">Nenhuma tarefa em atraso no momento.</p>
+          {tarefas.length === 0 ? (
+            <p className="text-center text-slate-500 font-medium py-8">Nenhuma tarefa encontrada para este indicador.</p>
           ) : (
             <div className="space-y-4">
-              {tarefasAtrasadas.map((tarefa, index) => {
-                const diasAtraso = Math.floor((new Date().getTime() - new Date(tarefa.raw_datetime).getTime()) / (1000 * 60 * 60 * 24));
+              {tarefas.map((tarefa, index) => {
                 const isExpanded = expandedTaskId === tarefa.id;
+                const isOverdue = !tarefa.finalizada && tarefa.raw_datetime && new Date(tarefa.raw_datetime) < new Date();
                 
                 return (
-                  <div key={index} className={`bg-white rounded-xl border ${isExpanded ? 'border-red-300 shadow-md' : 'border-red-100 shadow-sm'} transition-all overflow-hidden`}>
+                  <div key={index} className={`bg-white rounded-xl border ${isExpanded ? 'border-blue-300 shadow-md' : 'border-gray-200 shadow-sm'} transition-all overflow-hidden`}>
                     <div className="p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                       <div>
-                        <span className="inline-block px-2 py-1 bg-red-100 text-red-700 text-[10px] font-bold rounded-md uppercase tracking-wider mb-2">
-                          Atrasada há {diasAtraso} dia{diasAtraso !== 1 ? 's' : ''}
-                        </span>
+                        <div className="flex gap-2 mb-2">
+                          <span className={`inline-block px-2 py-1 text-[10px] font-bold rounded-md uppercase tracking-wider ${tarefa.finalizada ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                            {tarefa.finalizada ? 'Finalizada' : 'Em Aberto'}
+                          </span>
+                          {isOverdue && (
+                            <span className="inline-block px-2 py-1 bg-red-100 text-red-700 text-[10px] font-bold rounded-md uppercase tracking-wider">
+                              Atrasada
+                            </span>
+                          )}
+                        </div>
                         <h4 className="text-sm font-bold text-slate-800">{tarefa.titulo || 'Sem Título'}</h4>
                         <p className="text-xs text-slate-500 mt-1">
                           <strong>Vendedor:</strong> {tarefa.nome_vendedor} &nbsp;|&nbsp; 
-                          <strong>Cliente:</strong> {tarefa.nome_cliente}
+                          <strong>Cliente:</strong> {tarefa.nome_cliente || 'Sem Contato'}
                         </p>
                       </div>
                       <div className="text-right whitespace-nowrap flex flex-col justify-between items-end gap-2">
@@ -66,7 +73,7 @@ export function DelayedTasksModal({ tarefas, interacoes, onClose }: DelayedTasks
                             href={`https://app10.ploomes.com/Tasks/calendar/task/${tarefa.id}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-[10px] font-bold text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-3 py-1 rounded-md transition-colors inline-flex items-center"
+                            className="text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-md transition-colors inline-flex items-center"
                           >
                             Ploomes ↗
                           </a>
@@ -75,7 +82,7 @@ export function DelayedTasksModal({ tarefas, interacoes, onClose }: DelayedTasks
                     </div>
                     
                     {isExpanded && tarefa.id && (
-                      <div className="p-4 border-t border-red-50 bg-slate-50/50">
+                      <div className="p-4 border-t border-blue-50 bg-slate-50/50">
                         <TaskInteractionsTimeline taskId={tarefa.id as number} interacoes={interacoes} />
                       </div>
                     )}

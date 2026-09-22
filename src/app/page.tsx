@@ -9,19 +9,27 @@ import { ActivityChart } from '@/components/charts/ActivityChart';
 import { InfoPopover } from '@/components/ui/InfoPopover';
 import { useTarefas } from '@/hooks/useTarefas';
 import { ClientDetailsModal } from '@/components/modals/ClientDetailsModal';
+import { DailyOperationsPanel } from '@/components/daily/DailyOperationsPanel';
+import { KpiDetailsModal } from '@/components/modals/KpiDetailsModal';
 import { DelayedTasksModal } from '@/components/modals/DelayedTasksModal';
+import { Tarefa } from '@/types/tarefa';
 
 export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [clientDetailsModal, setClientDetailsModal] = useState<string | null>(null);
+  const [kpiModalData, setKpiModalData] = useState<{ title: string; tarefas: Tarefa[] } | null>(null);
 
   const {
+    tarefas,
     tarefasFiltradas,
     loading,
-    kpis: {
+    interacoes,
+      kpis: {
       totalTarefas,
       tarefasFechadas,
       tarefasAtrasadas,
+      tarefasFechadasSemInteracao,
+      tarefasFantasmas,
       mediaDiaria,
       visitasPresenciais,
       clientesAtendidos,
@@ -60,14 +68,15 @@ export default function Home() {
         </header>
 
         {/* Diagnósticos e Alertas */}
-        {!loading && (tarefasAtrasadas > 0 || conformidadeContatos < 100) && (
-          <div className="mb-8 flex items-center justify-between p-4 bg-red-50 border border-red-200 rounded-xl shadow-sm">
+        {!loading && (tarefasAtrasadas > 0 || conformidadeContatos < 100 || tarefasFechadasSemInteracao > 0) && (
+          <div className="mb-6 flex items-center justify-between p-4 bg-red-50 border border-red-200 rounded-xl shadow-sm">
             <div className="flex items-center">
               <span className="flex items-center justify-center w-10 h-10 bg-red-100 text-red-600 rounded-full mr-4 shrink-0">⚠️</span>
               <div>
                 <h4 className="font-bold text-red-700">Atenção Necessária</h4>
                 <p className="text-sm text-red-600/80 mt-1">
                   Existem <strong className="text-red-700">{tarefasAtrasadas} Tarefas em Atraso</strong> e <strong>{100 - conformidadeContatos}%</strong> das tarefas estão sem contato preenchido.
+                  {tarefasFechadasSemInteracao > 0 && <span> Há <strong className="text-red-700">{tarefasFechadasSemInteracao} tarefas finalizadas sem registro de interação</strong> (sem engajamento).</span>}
                 </p>
               </div>
             </div>
@@ -80,22 +89,31 @@ export default function Home() {
           </div>
         )}
 
+        {/* Painel Diário (Fixo no dia de hoje) */}
+        {!loading && <DailyOperationsPanel tarefas={tarefas} />}
+
         {/* KPI Cards: Grid 10x */}
         {!loading && (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-10">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-10">
             {[
-              { label: 'Total Tarefas', value: totalTarefas, color: 'text-slate-800', tooltip: 'Todas as tarefas contabilizadas no período filtrado.' },
-              { label: 'Finalizadas', value: tarefasFechadas, color: 'text-emerald-600', tooltip: 'Tarefas marcadas como concluídas no Ploomes.' },
-              { label: 'Em Atraso', value: tarefasAtrasadas, color: 'text-red-600', tooltip: 'Tarefas em aberto que já passaram da data limite.' },
-              { label: 'Média Diária', value: mediaDiaria, color: 'text-blue-600', tooltip: 'Média de tarefas realizadas por dia no período.' },
-              { label: 'Visitas Presenc.', value: visitasPresenciais, color: 'text-slate-800', tooltip: 'Total de tarefas do tipo Visita Presencial.' },
-              { label: 'Clientes Atend.', value: clientesAtendidos, color: 'text-slate-800', tooltip: 'Qtd de clientes únicos que receberam alguma atividade.' },
-              { label: 'Negócios Trab.', value: negociosTrabalhados, color: 'text-slate-800', tooltip: 'Qtd de oportunidades exclusivas trabalhadas nestas tarefas.' },
-              { label: 'Horas (h)', value: horasAtendimento.toFixed(1), color: 'text-slate-800', tooltip: 'Soma total da duração (length) apontada nas tarefas.' },
-              { label: 'Conformidade', value: `${conformidadeContatos}%`, color: conformidadeContatos === 100 ? 'text-emerald-600' : 'text-amber-500', tooltip: '% de tarefas corretamente associadas a um contato/cliente.' },
-              { label: 'Sync Google', value: `${googleSyncRate}%`, color: 'text-blue-600', tooltip: '% de tarefas enviadas ao Google Calendar.' }
+              { label: 'Total Tarefas', value: totalTarefas, color: 'text-slate-800', tooltip: 'Todas as tarefas contabilizadas no período filtrado.', filteredTasks: tarefasFiltradas },
+              { label: 'Finalizadas', value: tarefasFechadas, color: 'text-emerald-600', tooltip: 'Tarefas marcadas como concluídas no Ploomes.', filteredTasks: tarefasFiltradas.filter(t => t.finalizada) },
+              { label: 'Em Atraso', value: tarefasAtrasadas, color: 'text-red-600', tooltip: 'Tarefas em aberto que já passaram da data limite.', filteredTasks: tarefasFiltradas.filter(t => !t.finalizada && t.raw_datetime && new Date(t.raw_datetime) < new Date()) },
+              { label: 'Fantasmas', value: tarefasFantasmas, color: tarefasFantasmas > 0 ? 'text-amber-500' : 'text-emerald-600', tooltip: 'Tarefas criadas e executadas no mesmo dia (não planejadas previamente).', filteredTasks: tarefasFiltradas.filter(t => { const cd = t.CreateDate ? new Date(t.CreateDate).toLocaleDateString('pt-BR') : ''; const rd = t.raw_datetime ? new Date(t.raw_datetime).toLocaleDateString('pt-BR') : ''; return cd === rd; }) },
+              { label: 'Sem Engajamento', value: tarefasFechadasSemInteracao, color: tarefasFechadasSemInteracao > 0 ? 'text-red-600' : 'text-emerald-600', tooltip: 'Tarefas concluídas que não possuem registro de interação.', filteredTasks: tarefasFiltradas.filter(t => t.finalizada && t.id && !new Set(interacoes.filter(i => i.task_id).map(i => i.task_id)).has(t.id as number)) },
+              { label: 'Média Diária', value: mediaDiaria, color: 'text-blue-600', tooltip: 'Média de tarefas realizadas por dia no período.', filteredTasks: null },
+              { label: 'Visitas Presenc.', value: visitasPresenciais, color: 'text-slate-800', tooltip: 'Total de tarefas do tipo Visita Presencial.', filteredTasks: tarefasFiltradas.filter(t => t.tipo_tarefa.toLowerCase().includes('visita')) },
+              { label: 'Clientes Atend.', value: clientesAtendidos, color: 'text-slate-800', tooltip: 'Qtd de clientes únicos que receberam alguma atividade.', filteredTasks: null },
+              { label: 'Negócios Trab.', value: negociosTrabalhados, color: 'text-slate-800', tooltip: 'Qtd de oportunidades exclusivas trabalhadas nestas tarefas.', filteredTasks: null },
+              { label: 'Horas (h)', value: horasAtendimento.toFixed(1), color: 'text-slate-800', tooltip: 'Soma total da duração (length) apontada nas tarefas.', filteredTasks: null },
+              { label: 'Conformidade', value: `${conformidadeContatos}%`, color: conformidadeContatos === 100 ? 'text-emerald-600' : 'text-amber-500', tooltip: '% de tarefas corretamente associadas a um contato/cliente.', filteredTasks: null },
+              { label: 'Sync Google', value: `${googleSyncRate}%`, color: 'text-blue-600', tooltip: '% de tarefas enviadas ao Google Calendar.', filteredTasks: null }
             ].map((kpi, idx) => (
-              <div key={idx} className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+              <div 
+                key={idx} 
+                onClick={() => kpi.filteredTasks && setKpiModalData({ title: kpi.label, tarefas: kpi.filteredTasks })}
+                className={`p-4 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-shadow ${kpi.filteredTasks ? 'cursor-pointer hover:border-blue-200' : ''}`}
+              >
                 <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center justify-between">
                   {kpi.label}
                   <InfoPopover content={kpi.tooltip} />
@@ -138,7 +156,17 @@ export default function Home() {
       {isModalOpen && (
         <DelayedTasksModal 
           tarefas={tarefasFiltradas} 
+          interacoes={interacoes}
           onClose={() => setIsModalOpen(false)} 
+        />
+      )}
+
+      {kpiModalData && (
+        <KpiDetailsModal 
+          title={kpiModalData.title}
+          tarefas={kpiModalData.tarefas}
+          interacoes={interacoes}
+          onClose={() => setKpiModalData(null)}
         />
       )}
 

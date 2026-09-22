@@ -10,6 +10,7 @@ export function TopNav() {
   const links = [
     { label: 'Visão Geral', href: '/', icon: '📊' },
     { label: 'Vendedores', href: '/vendedores', icon: '👥' },
+    { label: 'Mapa', href: '/mapa', icon: '📍' },
     { label: 'Clientes', href: '/clientes', icon: '🏥' },
     { label: 'Temporal', href: '/temporal', icon: '⏳' },
     { label: 'Operacional', href: '/operacional', icon: '⚙️' },
