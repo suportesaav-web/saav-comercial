@@ -117,5 +117,5 @@ saav-comercial/
 <br>
 
 <div align="center" style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-  <p style="color: #94a3b8; font-size: 0.95rem;">Desenvolvido com foco em alta performance e escalabilidade estrutural para o time Comercial Saavedra.</p>
+  <p style="color: #94a3b8; font-size: 0.95rem;">Desenvolvido por Jonatan Severo • Saavedra Suporte Web<br>E-mail: suporte.saav@saavedra.com.br<br>Propriedade exclusiva e confidencial da Saavedra. Todos os direitos reservados.</p>
 </div>
