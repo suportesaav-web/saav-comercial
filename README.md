@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<div align="center">
+  <h1 style="color: #3b82f6; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">Gestão de Tarefas Ploomes</h1>
+  <p style="font-size: 1.2rem; color: #64748b;">Dashboard Analítico - Comercial Saavedra</p>
+</div>
 
-## Getting Started
+---
 
-First, run the development server:
+<br>
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🚀 Visão Geral
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Este projeto é um painel de inteligência comercial (Dashboard BI) construído em **Next.js** para visualizar e gerenciar as tarefas da equipe comercial sincronizadas a partir do CRM **Ploomes**. 
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Ele oferece acompanhamento em tempo real de KPIs críticos, tarefas em atraso, e gráficos analíticos interativos.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+<br>
 
-## Learn More
+## ✨ Principais Funcionalidades
 
-To learn more about Next.js, take a look at the following resources:
+- 📊 **Métricas em Tempo Real:** Visualização de tarefas totais, finalizadas, em atraso e taxa de conformidade.
+- 📈 **Gráficos Analíticos:** Gráficos de tendências temporais, mapas de atividades por dia da semana e distribuição de tipos de atendimento.
+- 🏢 **Detalhamento de Clientes:** Tabelas interativas detalhando o esforço comercial por cliente com possibilidade de visualizar as tarefas de cada um.
+- ⚠️ **Alertas Inteligentes:** Avisos automáticos sobre tarefas atrasadas.
+- ⚡ **Alta Performance:** Fetching otimizado de dados utilizando `SWR` e componentes modulares no padrão React Server Components e Client Components.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+<br>
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🛠 Tecnologias Utilizadas
 
-## Deploy on Vercel
+<div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
+  <span style="background-color: #000; color: #fff; padding: 5px 10px; border-radius: 5px; font-weight: bold;">Next.js (App Router)</span>
+  <span style="background-color: #3178c6; color: #fff; padding: 5px 10px; border-radius: 5px; font-weight: bold;">TypeScript</span>
+  <span style="background-color: #0ea5e9; color: #fff; padding: 5px 10px; border-radius: 5px; font-weight: bold;">Tailwind CSS</span>
+  <span style="background-color: #f37021; color: #fff; padding: 5px 10px; border-radius: 5px; font-weight: bold;">Recharts</span>
+  <span style="background-color: #6366f1; color: #fff; padding: 5px 10px; border-radius: 5px; font-weight: bold;">SWR</span>
+  <span style="background-color: #4b5563; color: #fff; padding: 5px 10px; border-radius: 5px; font-weight: bold;">Zustand</span>
+</div>
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+<br>
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## ⚙️ Como Executar o Projeto Localmente
+
+1. **Clone o repositório:**
+   ```bash
+   git clone <url-do-repositorio>
+   cd saav-comercial
+   ```
+
+2. **Instale as dependências:**
+   ```bash
+   npm install
+   ```
+
+3. **Configure as Variáveis de Ambiente:**
+   Certifique-se de que o arquivo `.env.local` contém as chaves da API:
+   ```env
+   PLOOMES_API_KEY=sua_chave_aqui
+   ```
+
+4. **Inicie o Servidor de Desenvolvimento:**
+   ```bash
+   npm run dev
+   ```
+
+5. **Acesse no Navegador:**
+   Abra [http://localhost:3000](http://localhost:3000).
+
+<br>
+
+<div align="center">
+  <p style="color: #94a3b8; font-size: 0.9rem;">Desenvolvido com padrão de melhores práticas para o Comercial Saavedra.</p>
+</div>

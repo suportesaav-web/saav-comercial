@@ -10,6 +10,11 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  
+  /* Cores da Saavedra */
+  --color-brand-orange: #F37021;
+  --color-brand-red: #DA291C;
+  --color-brand-dark: #25282B;
 }
 
 @media (prefers-color-scheme: dark) {
