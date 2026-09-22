@@ -31,38 +31,44 @@ export async function GET() {
     if (!res.ok) throw new Error('Falha ao buscar fallback da API');
 
     const data = await res.json();
-    const tarefasMapeadas = data.value.map((task: any) => {
+    const tarefasMapeadas = data.value.flatMap((task: any) => {
       const isFinalizada = task.Finished; 
 
-      let vendedorNome = task.Creator ? task.Creator.Name : 'Desconhecido';
+      let vendedores: string[] = [];
+      let criadorNome = task.Creator ? task.Creator.Name : 'Desconhecido';
       
-      if (vendedorNome === 'Google Calendar') {
-        if (task.Users && task.Users.length > 0) {
-          vendedorNome = task.Users.map((u: any) => u.User?.Name || 'Desconhecido').join(' e ');
-        } else if (task.Deal && task.Deal.Owner) {
-          vendedorNome = task.Deal.Owner.Name;
+      if (task.Users && task.Users.length > 0) {
+        vendedores = task.Users.map((u: any) => u.User?.Name || 'Desconhecido');
+      } else if (criadorNome === 'Google Calendar') {
+        if (task.Deal && task.Deal.Owner) {
+          vendedores = [task.Deal.Owner.Name];
         } else if (task.Contact && task.Contact.Owner) {
-          vendedorNome = task.Contact.Owner.Name;
+          vendedores = [task.Contact.Owner.Name];
         } else {
-          vendedorNome = 'Vendedor (Google Agenda)';
+          vendedores = ['Vendedor (Google Agenda)'];
         }
+      } else {
+        vendedores = [criadorNome];
       }
 
-      return {
-        tipo_tarefa: task.Type ? task.Type.Name : 'Outros', 
-        titulo: task.Title || 'Sem Título',
-        nome_cliente: task.Contact ? task.Contact.Name : 'Sem Contato',
-        nome_vendedor: vendedorNome,
-        titulo_negocio: task.Deal ? task.Deal.Title : 'Não Vinculado',
-        deal_id: task.DealId,
-        status_operacional: isFinalizada ? 'Fechada' : 'Em Aberto',
-        finalizada: isFinalizada,
-        data_evento_str: task.DateTime ? new Date(task.DateTime).toLocaleDateString('pt-BR') : 'Data não definida',
-        raw_datetime: task.DateTime,
-        horas: typeof task.Length === 'number' ? task.Length : 0,
-        contact_id: task.ContactId,
-        google_sync: !!task.CreatesGoogleCalendarEvent,
-      };
+      return vendedores.map((vendedorNome, index) => {
+        return {
+          id: vendedores.length > 1 ? `${task.Id}-${index}` : task.Id,
+          tipo_tarefa: task.Type ? task.Type.Name : 'Outros', 
+          titulo: task.Title || 'Sem Título',
+          nome_cliente: task.Contact ? task.Contact.Name : 'Sem Contato',
+          nome_vendedor: vendedorNome,
+          titulo_negocio: task.Deal ? task.Deal.Title : 'Não Vinculado',
+          deal_id: task.DealId,
+          status_operacional: isFinalizada ? 'Fechada' : 'Em Aberto',
+          finalizada: isFinalizada,
+          data_evento_str: task.DateTime ? new Date(task.DateTime).toLocaleDateString('pt-BR') : 'Data não definida',
+          raw_datetime: task.DateTime,
+          horas: typeof task.Length === 'number' ? task.Length : 0,
+          contact_id: task.ContactId,
+          google_sync: !!task.CreatesGoogleCalendarEvent,
+        };
+      });
     }).filter((task: any) => {
       const v = task.nome_vendedor.toLowerCase();
       return !v.includes('informatica') && !v.includes('powerbi');

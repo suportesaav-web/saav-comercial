@@ -1,5 +1,5 @@
 export interface Tarefa {
-  id?: number;
+  id?: number | string;
   tipo_tarefa: string;
   titulo: string;
   nome_cliente: string;
