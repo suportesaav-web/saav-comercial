@@ -20,7 +20,7 @@ export async function GET() {
       return NextResponse.json([]); // Retorna vazio se não tiver nem cache nem chave
     }
 
-    const res = await fetch('https://api2.ploomes.com/Tasks?$top=200&$expand=Contact,Creator,Type,Deal&$orderby=DateTime desc', {
+    const res = await fetch('https://api2.ploomes.com/Tasks?$top=200&$expand=Contact($expand=Owner),Creator,Type,Deal($expand=Pipeline,Owner)&$orderby=DateTime desc', {
       headers: {
         'User-Key': ploomesApiKey,
         'Content-Type': 'application/json',
@@ -33,11 +33,24 @@ export async function GET() {
     const data = await res.json();
     const tarefasMapeadas = data.value.map((task: any) => {
       const isFinalizada = task.Finished; 
+
+      let vendedorNome = task.Creator ? task.Creator.Name : 'Desconhecido';
+      
+      if (vendedorNome === 'Google Calendar') {
+        if (task.Deal && task.Deal.Owner) {
+          vendedorNome = task.Deal.Owner.Name;
+        } else if (task.Contact && task.Contact.Owner) {
+          vendedorNome = task.Contact.Owner.Name;
+        } else {
+          vendedorNome = 'Vendedor (Google Agenda)';
+        }
+      }
+
       return {
         tipo_tarefa: task.Type ? task.Type.Name : 'Outros', 
         titulo: task.Title || 'Sem Título',
         nome_cliente: task.Contact ? task.Contact.Name : 'Sem Contato',
-        nome_vendedor: task.Creator ? task.Creator.Name : 'Desconhecido',
+        nome_vendedor: vendedorNome,
         titulo_negocio: task.Deal ? task.Deal.Title : 'Não Vinculado',
         deal_id: task.DealId,
         status_operacional: isFinalizada ? 'Fechada' : 'Em Aberto',
