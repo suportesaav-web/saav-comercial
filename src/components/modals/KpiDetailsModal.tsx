@@ -4,21 +4,25 @@ import { Interacao } from '@/types/interacao';
 import { TaskInteractionsTimeline } from '@/components/timeline/TaskInteractionsTimeline';
 
 interface KpiDetailsModalProps {
-  title: string;
+  title?: string;
+  kpiTitle?: string;
+  isOpen?: boolean;
   tarefas: Tarefa[];
   interacoes: Interacao[];
   onClose: () => void;
 }
 
-export function KpiDetailsModal({ title, tarefas, interacoes, onClose }: KpiDetailsModalProps) {
+export function KpiDetailsModal({ title, kpiTitle, tarefas, interacoes, onClose }: KpiDetailsModalProps) {
   const [expandedTaskId, setExpandedTaskId] = useState<number | null>(null);
+  
+  const displayTitle = title || kpiTitle || 'Detalhes';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden">
         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-blue-50">
           <h3 className="text-xl font-bold text-blue-800 flex items-center">
-            <span className="mr-2">📋</span> {title} ({tarefas.length})
+            <span className="mr-2">📋</span> {displayTitle} ({tarefas.length})
           </h3>
           <button 
             onClick={onClose}

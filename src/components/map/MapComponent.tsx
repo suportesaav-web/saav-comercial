@@ -26,7 +26,7 @@ interface MapComponentProps {
 export default function MapComponent({ interacoes, tarefas = [] }: MapComponentProps) {
   // Cria um dicionário de tarefas para busca rápida (O(1))
   const tarefasMap = useMemo(() => {
-    const map = new Map<number, Tarefa>();
+    const map = new Map<number | string, Tarefa>();
     tarefas.forEach(t => {
       if (t.id) map.set(t.id, t);
     });
@@ -41,13 +41,13 @@ export default function MapComponent({ interacoes, tarefas = [] }: MapComponentP
       return {
         id: i.id,
         task_id: i.task_id,
-        lat: parseFloat(i.checkin_lat!),
-        lng: parseFloat(i.checkin_lng!),
+        lat: i.checkin_lat!,
+        lng: i.checkin_lng!,
         vendedor: i.nome_vendedor || 'Desconhecido',
-        data: i.data_criacao_str,
+        data: i.data_str,
         cliente: tarefa?.nome_cliente || 'Sem Cliente Vinculado',
         titulo_tarefa: tarefa?.titulo || 'Sem Título',
-        content: i.content || 'Sem comentário',
+        content: i.conteudo || 'Sem comentário',
         duracao: i.duracao_segundos ? Math.round(i.duracao_segundos / 60) : 0
       };
     });

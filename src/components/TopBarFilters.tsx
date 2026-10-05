@@ -14,6 +14,7 @@ export function TopBarFilters() {
     clientes, setClientes,
     tiposTarefa, setTiposTarefa,
     status, setStatus,
+    funis, setFunis,
     hideInternalTasks, setHideInternalTasks,
     resetFilters
   } = useFilterStore();
@@ -30,6 +31,7 @@ export function TopBarFilters() {
   const uniqueClientes = useMemo(() => Array.from(new Set(tarefas.map(t => t.nome_cliente).filter(Boolean))).sort(), [tarefas]);
   const uniqueTipos = useMemo(() => Array.from(new Set(tarefas.map(t => t.tipo_tarefa).filter(Boolean))).sort(), [tarefas]);
   const uniqueStatus = useMemo(() => Array.from(new Set(tarefas.map(t => t.status_operacional).filter(Boolean))).sort(), [tarefas]);
+  const uniqueFunis = useMemo(() => Array.from(new Set(tarefas.map(t => t.funil).filter(Boolean))).sort(), [tarefas]);
 
   // Função helper para toggles
   const handleToggle = (item: string, current: {value: string, label: string}[], setter: (val: any) => void) => {
@@ -97,6 +99,28 @@ export function TopBarFilters() {
             </div>
           </div>
 
+          {/* Negócios (Deals/Funis) */}
+          <div className="flex flex-col space-y-2 relative group">
+            <label className="text-xs font-bold text-slate-500 uppercase">Negócios (Deals)</label>
+            <div className="w-full text-xs p-2 border border-gray-300 rounded-md bg-white text-slate-700 cursor-pointer flex justify-between items-center">
+              <span className="truncate">{funis.length > 0 ? `${funis.length} selecionado(s)` : 'Todos'}</span>
+              <span>▼</span>
+            </div>
+            <div className="absolute top-full left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white border border-gray-200 shadow-lg rounded-md hidden group-hover:block z-50">
+              {uniqueFunis.map((f, idx) => (
+                <label key={idx} className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer text-xs truncate">
+                  <input 
+                    type="checkbox" 
+                    checked={!!funis.find(x => x.value === f)}
+                    onChange={() => handleToggle(f as string, funis, setFunis)}
+                    className="mr-2 shrink-0"
+                  />
+                  <span className="truncate">{f}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
           {/* Vendedores */}
           <div className="flex flex-col space-y-2 relative group">
             <label className="text-xs font-bold text-slate-500 uppercase">Vendedor / Equipe</label>
@@ -137,28 +161,6 @@ export function TopBarFilters() {
                     className="mr-2 shrink-0"
                   />
                   <span className="truncate">{c}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Canal / Tipo */}
-          <div className="flex flex-col space-y-2 relative group">
-            <label className="text-xs font-bold text-slate-500 uppercase">Canal / Atividade</label>
-            <div className="w-full text-xs p-2 border border-gray-300 rounded-md bg-white text-slate-700 cursor-pointer flex justify-between items-center">
-              <span className="truncate">{tiposTarefa.length > 0 ? `${tiposTarefa.length} selecionado(s)` : 'Todos'}</span>
-              <span>▼</span>
-            </div>
-            <div className="absolute top-full left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white border border-gray-200 shadow-lg rounded-md hidden group-hover:block z-50">
-              {uniqueTipos.map((t, idx) => (
-                <label key={idx} className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer text-xs">
-                  <input 
-                    type="checkbox" 
-                    checked={!!tiposTarefa.find(x => x.value === t)}
-                    onChange={() => handleToggle(t as string, tiposTarefa, setTiposTarefa)}
-                    className="mr-2"
-                  />
-                  {t}
                 </label>
               ))}
             </div>

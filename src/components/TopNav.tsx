@@ -8,12 +8,12 @@ export function TopNav() {
   const pathname = usePathname();
 
   const links = [
-    { label: 'Visão Geral', href: '/', icon: '📊' },
-    { label: 'Vendedores', href: '/vendedores', icon: '👥' },
-    { label: 'Mapa', href: '/mapa', icon: '📍' },
-    { label: 'Clientes', href: '/clientes', icon: '🏥' },
-    { label: 'Temporal', href: '/temporal', icon: '⏳' },
-    { label: 'Operacional', href: '/operacional', icon: '⚙️' },
+    { label: 'Geral', href: '/', icon: '📊' },
+    { label: 'Interações', href: '/interacoes', icon: '🤝' },
+    { label: 'Performance', href: '/performance', icon: '🏆' },
+    { label: 'Análise Temporal', href: '/temporal', icon: '⏳' },
+    { label: 'Clientes', href: '/clientes', icon: '🏢' },
+    { label: 'Auditoria', href: '/auditoria', icon: '🔍' },
     { label: 'Sincronização', href: '/sincronizacao', icon: '🔄' },
     { label: 'Guia', href: '/guia', icon: '📖' },
   ];

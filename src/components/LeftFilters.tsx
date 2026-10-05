@@ -15,6 +15,7 @@ export function LeftFilters() {
     status, setStatus,
     funis, setFunis,
     hideInternalTasks, setHideInternalTasks,
+    onlyInternalTasks, setOnlyInternalTasks,
     resetFilters
   } = useFilterStore();
 
@@ -63,16 +64,31 @@ export function LeftFilters() {
 
       <div className="flex-1 overflow-y-auto p-5 space-y-6">
         
-        {/* Toggle Internas */}
-        <label className="flex items-start space-x-3 text-sm text-slate-800 font-medium cursor-pointer p-3 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-100 transition-colors">
-          <input 
-            type="checkbox" 
-            checked={hideInternalTasks}
-            onChange={(e) => setHideInternalTasks(e.target.checked)}
-            className="mt-1 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
-          />
-          <span className="leading-tight text-blue-900 text-xs font-bold">Ocultar Reuniões Internas da Saavedra</span>
-        </label>
+        {/* Toggles Internas */}
+        <div className="flex flex-col space-y-2">
+          <label className="flex items-start space-x-3 text-sm text-slate-800 font-medium cursor-pointer p-3 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-100 transition-colors">
+            <input 
+              type="checkbox" 
+              checked={hideInternalTasks}
+              onChange={(e) => {
+                setHideInternalTasks(e.target.checked);
+              }}
+              className="mt-1 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
+            />
+            <span className="leading-tight text-blue-900 text-xs font-bold">Ocultar Reuniões Internas</span>
+          </label>
+          <label className="flex items-start space-x-3 text-sm text-slate-800 font-medium cursor-pointer p-3 bg-indigo-50 border border-indigo-100 rounded-xl hover:bg-indigo-100 transition-colors">
+            <input 
+              type="checkbox" 
+              checked={onlyInternalTasks}
+              onChange={(e) => {
+                setOnlyInternalTasks(e.target.checked);
+              }}
+              className="mt-1 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+            />
+            <span className="leading-tight text-indigo-900 text-xs font-bold">Ver Apenas Reuniões Internas</span>
+          </label>
+        </div>
 
         {/* Período */}
         <div className="flex flex-col space-y-2">
@@ -95,7 +111,28 @@ export function LeftFilters() {
 
         <hr className="border-gray-100" />
 
-        {/* Vendedores */}
+        {/* Negócios (Deals/Funis) */}
+        <div className="flex flex-col space-y-2">
+          <label className="text-xs font-bold text-slate-500 uppercase tracking-wide flex justify-between">
+            Negócios (Deals)
+            <span className="text-blue-600 font-bold">{funis.length > 0 ? `(${funis.length})` : ''}</span>
+          </label>
+          <div className="max-h-32 overflow-y-auto space-y-1 p-2 bg-gray-50 border border-gray-200 rounded-lg shadow-inner">
+            {uniqueFunis.map((f, idx) => (
+              <label key={idx} className="flex items-center hover:bg-white p-1.5 rounded cursor-pointer transition-colors group">
+                <input 
+                  type="checkbox" 
+                  checked={!!funis.find(x => x.value === f)}
+                  onChange={() => handleToggle(f as string, funis, setFunis)}
+                  className="mr-3 rounded text-blue-600 focus:ring-blue-500 cursor-pointer border-gray-300"
+                />
+                <span className="text-xs font-bold text-slate-800 group-hover:text-blue-700 truncate">{f}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Vendedor */}
         <div className="flex flex-col space-y-2">
           <label className="text-xs font-bold text-slate-500 uppercase tracking-wide flex justify-between">
             Vendedor / Equipe
@@ -132,48 +169,6 @@ export function LeftFilters() {
                   className="mr-3 rounded text-blue-600 focus:ring-blue-500 cursor-pointer border-gray-300 shrink-0"
                 />
                 <span className="text-xs font-bold text-slate-800 group-hover:text-blue-700 truncate">{c}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* Atividade */}
-        <div className="flex flex-col space-y-2">
-          <label className="text-xs font-bold text-slate-500 uppercase tracking-wide flex justify-between">
-            Atividade / Canal
-            <span className="text-blue-600 font-bold">{tiposTarefa.length > 0 ? `(${tiposTarefa.length})` : ''}</span>
-          </label>
-          <div className="max-h-32 overflow-y-auto space-y-1 p-2 bg-gray-50 border border-gray-200 rounded-lg shadow-inner">
-            {uniqueTipos.map((t, idx) => (
-              <label key={idx} className="flex items-center hover:bg-white p-1.5 rounded cursor-pointer transition-colors group">
-                <input 
-                  type="checkbox" 
-                  checked={!!tiposTarefa.find(x => x.value === t)}
-                  onChange={() => handleToggle(t as string, tiposTarefa, setTiposTarefa)}
-                  className="mr-3 rounded text-blue-600 focus:ring-blue-500 cursor-pointer border-gray-300"
-                />
-                <span className="text-xs font-bold text-slate-800 group-hover:text-blue-700 truncate">{t}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* Funis */}
-        <div className="flex flex-col space-y-2">
-          <label className="text-xs font-bold text-slate-500 uppercase tracking-wide flex justify-between">
-            Funil / Pipeline
-            <span className="text-blue-600 font-bold">{funis.length > 0 ? `(${funis.length})` : ''}</span>
-          </label>
-          <div className="max-h-32 overflow-y-auto space-y-1 p-2 bg-gray-50 border border-gray-200 rounded-lg shadow-inner">
-            {uniqueFunis.map((f, idx) => (
-              <label key={idx} className="flex items-center hover:bg-white p-1.5 rounded cursor-pointer transition-colors group">
-                <input 
-                  type="checkbox" 
-                  checked={!!funis.find(x => x.value === f)}
-                  onChange={() => handleToggle(f as string, funis, setFunis)}
-                  className="mr-3 rounded text-blue-600 focus:ring-blue-500 cursor-pointer border-gray-300"
-                />
-                <span className="text-xs font-bold text-slate-800 group-hover:text-blue-700 truncate">{f}</span>
               </label>
             ))}
           </div>

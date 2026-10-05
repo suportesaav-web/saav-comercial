@@ -64,7 +64,7 @@ export default function GuiaUsoPage() {
                   <p className="text-sm text-slate-600 mb-4"><strong className="text-slate-700">Objetivo:</strong> Gestão da força de vendas e produtividade individual. Permite filtro individual para raio-X.</p>
                   
                   <h4 className="text-lg font-bold text-slate-800 mb-2">3. 🏥 Clientes & Negócios</h4>
-                  <p className="text-sm text-slate-600 mb-4"><strong className="text-slate-700">Objetivo:</strong> Cobertura de contas hospitalares e oportunidades comerciais (Top 15 clientes).</p>
+                  <p className="text-sm text-slate-600 mb-4"><strong className="text-slate-700">Objetivo:</strong> Cobertura de contas hospitalares e negócios comerciais (Top 15 clientes).</p>
                 </div>
                 <div>
                   <h4 className="text-lg font-bold text-slate-800 mb-2">4. ⏳ Análise Temporal</h4>

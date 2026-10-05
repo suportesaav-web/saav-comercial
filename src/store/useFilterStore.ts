@@ -14,6 +14,7 @@ interface FilterState {
   status: Option[];
   funis: Option[];
   hideInternalTasks: boolean;
+  onlyInternalTasks: boolean;
   
   // Actions
   setStartDate: (date: Date | null) => void;
@@ -24,6 +25,7 @@ interface FilterState {
   setStatus: (opts: Option[]) => void;
   setFunis: (opts: Option[]) => void;
   setHideInternalTasks: (hide: boolean) => void;
+  setOnlyInternalTasks: (only: boolean) => void;
   clearFilters: () => void;
   resetFilters: () => void;
 }
@@ -40,6 +42,7 @@ export const useFilterStore = create<FilterState>((set) => ({
   status: [],
   funis: [],
   hideInternalTasks: true,
+  onlyInternalTasks: false,
 
   setStartDate: (date) => set({ startDate: date }),
   setEndDate: (date) => set({ endDate: date }),
@@ -48,7 +51,8 @@ export const useFilterStore = create<FilterState>((set) => ({
   setTiposTarefa: (opts) => set({ tiposTarefa: opts }),
   setStatus: (opts) => set({ status: opts }),
   setFunis: (opts) => set({ funis: opts }),
-  setHideInternalTasks: (hide) => set({ hideInternalTasks: hide }),
+  setHideInternalTasks: (hide) => set({ hideInternalTasks: hide, onlyInternalTasks: hide ? false : false }),
+  setOnlyInternalTasks: (only) => set({ onlyInternalTasks: only, hideInternalTasks: only ? false : false }),
   clearFilters: () => set({ 
     startDate: firstDayOfMonth, 
     endDate: today, 

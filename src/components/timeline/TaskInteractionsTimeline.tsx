@@ -9,7 +9,7 @@ interface TaskInteractionsTimelineProps {
 export function TaskInteractionsTimeline({ taskId, interacoes }: TaskInteractionsTimelineProps) {
   const interacoesDaTarefa = interacoes
     .filter(i => i.task_id === taskId)
-    .sort((a, b) => new Date(b.data_criacao_str || b.DateTime || 0).getTime() - new Date(a.data_criacao_str || a.DateTime || 0).getTime());
+    .sort((a, b) => new Date(b.data_str || b.raw_datetime || 0).getTime() - new Date(a.data_str || a.raw_datetime || 0).getTime());
 
   if (interacoesDaTarefa.length === 0) {
     return (
@@ -42,11 +42,11 @@ export function TaskInteractionsTimeline({ taskId, interacoes }: TaskInteraction
                   {interacao.nome_vendedor || 'Sistema'}
                 </span>
                 <span className="text-xs font-medium text-slate-400">
-                  {interacao.data_criacao_str}
+                  {interacao.data_str}
                 </span>
               </div>
               <p className="text-sm text-slate-700 mb-2 leading-relaxed whitespace-pre-wrap">
-                {interacao.content || 'Interação sem conteúdo de texto.'}
+                {interacao.conteudo || 'Interação sem conteúdo de texto.'}
               </p>
               <div className="flex flex-wrap gap-2 mt-3">
                 {interacao.checkin_validado && (

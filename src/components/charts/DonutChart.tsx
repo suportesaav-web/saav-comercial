@@ -3,6 +3,7 @@
 import React from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { InfoPopover } from '@/components/ui/InfoPopover';
+import { useRouter } from 'next/navigation';
 
 const COLORS = ['#F37021', '#DA291C', '#25282B', '#fbbf24'];
 
@@ -11,6 +12,8 @@ interface DonutChartProps {
 }
 
 export function DonutChart({ data }: DonutChartProps) {
+  const router = useRouter();
+  
   return (
     <div className="w-full h-80 bg-white border border-gray-100 rounded-2xl p-6 shadow-sm flex flex-col hover:shadow-md transition-shadow">
       <div className="flex justify-between items-center mb-4">
@@ -33,9 +36,15 @@ export function DonutChart({ data }: DonutChartProps) {
               dataKey="value"
               stroke="none"
               cornerRadius={6}
+              onClick={undefined} // Removido do Pie
             >
               {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                <Cell 
+                  key={`cell-${index}`} 
+                  fill={COLORS[index % COLORS.length]} 
+                  className="hover:opacity-80 transition-opacity cursor-pointer"
+                  onClick={() => router.push(`/tarefas?search=${encodeURIComponent(entry.name)}`)}
+                />
               ))}
             </Pie>
             <Tooltip
