@@ -98,10 +98,10 @@ graph TD
   </tr>
   <tr>
     <td width="50%" valign="top">
-      <h3 style="color: #25282a; margin-top: 0;">🏢 Detalhamento Profundo</h3>
+      <h3 style="color: #25282a; margin-top: 0;">🏢 Navegação Inteligente (Drill-down)</h3>
       <ul>
-        <li><b>Raio-X de Clientes:</b> Modal completo listando todas as interações com um cliente específico, com links diretos para abrir o Ploomes.</li>
-        <li><b>Ranking de Vendedores:</b> Classificação transparente da força de vendas baseada no volume de execução.</li>
+        <li><b>Interatividade Dinâmica:</b> Gráficos de Funil, Barras e Tabelas permitem cliques que filtram os dados automaticamente.</li>
+        <li><b>Rotas de Detalhamento:</b> Páginas dedicadas (<code>/negocios</code> e <code>/tarefas</code>) para investigar indicadores a nível de registro.</li>
       </ul>
     </td>
     <td width="50%" valign="top">
@@ -118,12 +118,20 @@ graph TD
 
 ## 🖥️ Telas da Plataforma
 
-* **Dashboard Principal (`/`):** Visão macro da operação.
-* **Visão Vendedores (`/vendedores`):** Foco no desempenho individual.
-* **Visão Clientes (`/clientes`):** Detalhamento das empresas/contatos que mais demandam esforço comercial.
-* **Visão Operacional (`/operacional`):** Controle de qualidade.
-* **Visão Temporal (`/temporal`):** Análise de sazonalidade e tendências.
-* **Sincronização (`/sincronizacao`):** Painel de controle do processo ETL.
+A plataforma conta com as seguintes abas principais:
+
+* **Visão Geral (`/`):** Dashboard agregador de KPIs.
+* **Interações (`/interacoes`):** Análise do volume de ações da equipe.
+* **Performance (`/performance`):** Indicadores de vendas, taxas de conversão e funis.
+* **Análise Temporal (`/temporal`):** Heatmaps e tendências históricas.
+* **Clientes (`/clientes`):** Detalhamento das empresas que mais demandam esforço.
+* **Auditoria (`/auditoria`):** Controle de qualidade de preenchimento e conformidade.
+* **Sincronização (`/sincronizacao`):** Painel de extração e gestão do cache ETL.
+* **Guia (`/guia`):** Base de conhecimento e tutoriais da plataforma.
+
+E rotas internas de detalhamento (Drill-down):
+* **Base de Negócios (`/negocios`):** Tabela avançada para inspeção de oportunidades.
+* **Base de Tarefas (`/tarefas`):** Tabela para investigação do esforço operacional.
 
 ---
 
