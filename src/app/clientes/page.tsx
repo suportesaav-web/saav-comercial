@@ -110,7 +110,7 @@ export default function ClientesPage() {
                     radius={[0, 4, 4, 0]} 
                     barSize={20} 
                     animationDuration={1500}
-                    onClick={(data) => router.push(`/negocios?search=${encodeURIComponent(data.name)}`)}
+                    onClick={(data: any) => router.push(`/negocios?search=${encodeURIComponent(data?.name || '')}`)}
                     cursor="pointer"
                   >
                     {metrics.topDeals.map((entry, idx) => (
@@ -140,7 +140,7 @@ export default function ClientesPage() {
                   <Tooltip 
                     cursor={{ fill: '#f8fafc' }} 
                     contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }} 
-                    formatter={(value: number) => [new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value), 'Valor Ganho']}
+                    formatter={(value: any) => [new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value) || 0), 'Valor Ganho']}
                   />
                   <Bar 
                     dataKey="amount" 
@@ -148,7 +148,7 @@ export default function ClientesPage() {
                     radius={[0, 4, 4, 0]} 
                     barSize={24} 
                     animationDuration={1500}
-                    onClick={(data) => router.push(`/negocios?search=${encodeURIComponent(data.name)}`)}
+                    onClick={(data: any) => router.push(`/negocios?search=${encodeURIComponent(data?.name || '')}`)}
                     cursor="pointer"
                   >
                     {metrics.topFinanceiro.map((entry, idx) => (

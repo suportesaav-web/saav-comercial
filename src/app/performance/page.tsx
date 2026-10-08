@@ -182,7 +182,7 @@ export default function PerformancePage() {
                   </Pie>
                   <Tooltip 
                     contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }} 
-                    formatter={(value: number) => [value, 'Tarefas']}
+                    formatter={(value: any) => [value, 'Tarefas']}
                   />
                   <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px', color: '#64748b' }} />
                 </PieChart>
